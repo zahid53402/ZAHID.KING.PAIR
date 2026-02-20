@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZAHID KING PAIRING</title>
+    <style>
+        body { background: black; color: white; text-align: center; font-family: Arial; padding-top: 50px; }
+        input { padding: 10px; border-radius: 5px; border: none; width: 250px; }
+        button { padding: 10px 20px; background: red; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #code { font-size: 30px; color: yellow; margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body onclick="playMusic()">
+    <h1>ZAHID KING PAIRING CODE</h1>
+    <p>Click anywhere to play music 🎶</p>
+    <input type="text" id="number" placeholder="92300xxxxxxx">
+    <button onclick="getCode()">Get Code</button>
+    <div id="code"></div>
+
+    <audio id="bgMusic" loop>
+        <source src="https://cdn.statically.io/gh/Arslan-MD/Arslan-MD/main/ZAHID%20KING%202.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        function playMusic() { document.getElementById('bgMusic').play(); }
+        async function getCode() {
+            const num = document.getElementById('number').value;
+            const codeDiv = document.getElementById('code');
+            codeDiv.innerText = "Generating...";
+            const res = await fetch('/code?number=' + num);
+            const data = await res.json();
+            codeDiv.innerText = data.code || "Error!";
+        }
+    </script>
+</body>
+</html>
