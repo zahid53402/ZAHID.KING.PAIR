@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zᴀʜɪᴅ Kɪɴɢ - Pairing System</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Montserrat:wght@300;400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: linear-gradient(135deg, #FF4500, #228B22, #00CED1);
+      --bg: #0a0a12;
+      --glass: rgba(255, 255, 255, 0.08);
+      --highlight: #00FFFF;
+      --highlight-glow: 0 0 20px rgba(0, 255, 255, 0.7);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Montserrat', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: var(--bg);
+      color: white;
+      padding: 80px 20px;
+      overflow-x: hidden;
+    }
+
+    .logo-container { text-align: center; margin-bottom: 30px; }
+    .logo-img {
+      height: 110px; width: 110px; border-radius: 50%;
+      border: 3px solid var(--highlight);
+      box-shadow: var(--highlight-glow);
+      margin-bottom: 15px;
+      animation: pulse 2s infinite;
+    }
+
+    .logo-text {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: var(--primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 15px rgba(255, 69, 0, 0.4);
+    }
+
+    .main-box {
+      background: var(--glass);
+      backdrop-filter: blur(15px);
+      border-radius: 20px;
+      padding: 40px;
+      width: 100%;
+      max-width: 500px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    h2 { font-family: 'Orbitron'; margin-bottom: 10px; color: var(--highlight); }
+    p { color: #a0a0c0; margin-bottom: 25px; font-size: 0.9rem; }
+
+    .input-container input {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.4);
+      border: 1px solid #333;
+      color: white;
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .input-container input:focus { border-color: var(--highlight); outline: none; }
+
+    button {
+      width: 100%;
+      padding: 15px;
+      border-radius: 12px;
+      background: var(--primary);
+      border: none;
+      color: white;
+      font-weight: bold;
+      font-family: 'Orbitron';
+      cursor: pointer;
+      font-size: 1rem;
+      transition: 0.3s;
+    }
+
+    button:hover { transform: translateY(-3px); box-shadow: var(--highlight-glow); }
+
+    #pair-result {
+      margin-top: 25px;
+      padding: 20px;
+      border-radius: 12px;
+      background: rgba(0, 255, 255, 0.05);
+      border: 1px dashed var(--highlight);
+      display: none;
+    }
+
+    .code-text {
+      font-family: 'Orbitron';
+      font-size: 2.2rem;
+      letter-spacing: 5px;
+      color: white;
+      text-shadow: 0 0 10px var(--highlight);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo-container">
+    <img src="https://i.ibb.co/cKPcWsYG/temp.jpg" class="logo-img">
+    <div class="logo-text">Zᴀʜɪᴅ Kɪɴɢ</div>
+  </div>
+
+  <div class="main-box">
+    <h2>PREMIUM PAIRING</h2>
+    <p>Enter your number with country code (e.g., 92300xxx)</p>
+    
+    <div class="input-container">
+      <input type="number" id="number" placeholder="923000000000">
+      <button onclick="getCode()">GET PAIRING CODE</button>
+    </div>
+
+    <div id="pair-result">
+      <p style="color:var(--highlight); margin-bottom:10px;">YOUR CODE IS READY:</p>
+      <div class="code-text" id="display-code"></div>
+      <button style="margin-top:15px; font-size:0.8rem; padding:10px;" onclick="copyCode()">COPY CODE</button>
+    </div>
+  </div>
+
+  <audio id="myAudio" loop>
+    <source src="https://files.catbox.moe/5kkxwz.mpeg" type="audio/mpeg">
+  </audio>
+
+  <script>
+    // آٹو پلے کے لیے: جیسے ہی یوزر سکرین پر کہیں بھی کلک کرے گا، گانا شروع ہو جائے گا
+    document.addEventListener('click', function() {
+      var audio = document.getElementById("myAudio");
+      audio.play();
+    }, { once: true });
+
+    async function getCode() {
+      const num = document.getElementById('number').value;
+      const resBox = document.getElementById('pair-result');
+      const codeText = document.getElementById('display-code');
+
+      if(!num) return alert("Please enter your number!");
+
+      codeText.innerText = "WAITING...";
+      resBox.style.display = "block";
+
+      try {
+        const response = await fetch('/code?number=' + num);
+        const data = await response.json();
+        if(data.code) {
+          codeText.innerText = data.code;
+        } else {
+          codeText.innerText = "ERROR";
+        }
+      } catch (err) {
+        codeText.innerText = "SERVER ERROR";
+      }
+    }
+
+    function copyCode() {
+      const code = document.getElementById('display-code').innerText;
+      navigator.clipboard.writeText(code);
+      alert("Code Copied!");
+    }
+  </script>
+</body>
+</html>
