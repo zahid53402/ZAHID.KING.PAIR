@@ -5,7 +5,8 @@ const fs = require('fs-extra');
 const { default: makeWASocket, useMultiFileAuthState, delay, Browsers } = require("@whiskeysockets/baileys");
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+// ریپلٹ کی پورٹ 80 کی ضرورت کو پورا کرنے کے لیے
+const PORT = process.env.PORT || 80; 
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'pair.html'));
@@ -49,6 +50,7 @@ async function generatePairCode(req, res) {
 
 app.get('/code', generatePairCode);
 
-app.listen(PORT, () => {
-    console.log(`Server is live on port ${PORT}`);
+// 0.0.0.0 پر ہوسٹ کرنا ریپلٹ کے لیے لازمی ہے
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 ZAHID KING Server live on port ${PORT}`);
 });
