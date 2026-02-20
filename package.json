@@ -1,7 +1,6 @@
 {
   "name": "zahid-king-pairing",
   "version": "1.0.0",
-  "description": "Zahid King Official Pairing System",
   "main": "pair.js",
   "scripts": {
     "start": "node pair.js"
