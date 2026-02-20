@@ -6,8 +6,8 @@ const {
     default: makeWASocket, 
     useMultiFileAuthState, 
     delay, 
-    Browsers, 
-    makeCacheableSignalKeyStore 
+    makeCacheableSignalKeyStore,
+    DisconnectReason
 } = require("@whiskeysockets/baileys");
 
 const app = express();
@@ -22,7 +22,7 @@ async function ZAHID_KING_PAIR_CODE(req, res) {
     let num = req.query.number;
     if (!num) return res.status(400).json({ error: "Number missing" });
 
-    // سیشن کے لیے الگ فولڈر
+    // سیشن ڈائریکٹری
     const sessionDir = path.join(__dirname, 'session_' + Math.random().toString(36).substring(7));
     if (!fs.existsSync(sessionDir)) fs.mkdirSync(sessionDir);
 
@@ -36,14 +36,16 @@ async function ZAHID_KING_PAIR_CODE(req, res) {
             },
             printQRInTerminal: false,
             logger: pino({ level: 'silent' }),
-            // واٹس ایپ نوٹیفیکیشن کے لیے یہ سیٹنگ بہترین ہے
-            browser: ["Ubuntu", "Chrome", "20.0.04"]
+            // نوٹیفیکیشن نہ آنے کا حل: براؤزر کو Chrome Windows پر سیٹ کر دیا
+            browser: ["Chrome (Windows)", "Chrome", "110.0.5481.178"]
         });
 
-        // کوڈ جنریٹ کرنا
+        // پیئرنگ کوڈ کی ریکویسٹ
         if (!sock.authState.creds.registered) {
             await delay(3000);
-            const code = await sock.requestPairingCode(num);
+            // نمبر سے پہلے پلس (+) ختم کرنے کے لیے
+            let phoneNumber = num.replace(/[^0-9]/g, '');
+            const code = await sock.requestPairingCode(phoneNumber);
             if (!res.headersSent) {
                 res.json({ code: code });
             }
@@ -51,42 +53,44 @@ async function ZAHID_KING_PAIR_CODE(req, res) {
 
         sock.ev.on('creds.update', saveCreds);
 
-        sock.ev.on('connection.update', async (s) => {
-            const { connection, lastDisconnect } = s;
+        sock.ev.on('connection.update', async (update) => {
+            const { connection, lastDisconnect } = update;
 
             if (connection === 'open') {
                 await delay(10000);
-                
                 const credsPath = path.join(sessionDir, 'creds.json');
+                
                 if (fs.existsSync(credsPath)) {
                     const authFile = fs.readFileSync(credsPath);
                     const sessionId = Buffer.from(authFile).toString('base64');
-                    
-                    // فائنل آئی ڈی فارمیٹ
                     const finalId = `ZAHID-KING;;;${sessionId}`;
 
-                    // سیشن آئی ڈی واٹس ایپ پر بھیجنا
+                    // سیشن آئی ڈی بھیجنا
                     await sock.sendMessage(sock.user.id, { 
-                        text: `*✅ Zᴀʜɪᴅ Kɪɴɢ Cᴏɴɴᴇᴄᴛᴇᴅ*\n\n*SESSION ID:* \n\n${finalId}\n\n> Don't share your session ID with anyone!` 
+                        text: `*✅ Zᴀʜɪᴅ Kɪɴɢ CᴏɴɴᴇᴄᴛED*\n\n*SESSION ID:*\n\n${finalId}\n\n> Don't share this ID with anyone!` 
                     });
 
-                    console.log("✅ Session ID sent to WhatsApp!");
+                    console.log("✅ Session ID Sent!");
                 }
 
-                // صفائی (Cleanup)
+                // سیشن فولڈر کی صفائی
                 setTimeout(() => { 
                     try { fs.rmSync(sessionDir, { recursive: true, force: true }); } catch (e) {}
                 }, 15000);
             }
 
+            // اگر کنکشن کٹ جائے تو دوبارہ کنیکٹ نہ کرے تاکہ سیشن کلین رہے
             if (connection === 'close') {
-                // اگر کنکشن بند ہو جائے تو یہاں سے ہینڈل کیا جا سکتا ہے
+                let reason = lastDisconnect?.error?.output?.statusCode;
+                if (reason === DisconnectReason.restartRequired) {
+                    console.log("Restart Required...");
+                }
             }
         });
 
     } catch (err) {
-        console.error("Error in Pairing:", err);
-        if (!res.headersSent) res.status(500).json({ error: "Internal Server Error" });
+        console.error("Error:", err);
+        if (!res.headersSent) res.status(500).json({ error: "Server Error" });
     }
 }
 
